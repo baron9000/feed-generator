@@ -10,6 +10,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const ops = await getOpsByType(evt)
 
     //grab some samples to know what records look like without digging through code
+    /*
     for (const post of ops.posts.creates) {
       console.log(post.record)
       if (post.record.facets) {
@@ -23,7 +24,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             }
           }
       }
-    }
+    }*/
     function isImageEmbed(embed: any): boolean {
       return embed && embed.$type === 'AppBskyEmbedImages.Main';
     }
