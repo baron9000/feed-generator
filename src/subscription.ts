@@ -33,7 +33,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const englishPosts = ops.posts.creates.filter((create) => {
       const isEnglish = create.record.langs && create.record.langs.includes('en');
       if (isEnglish) {
-        console.log('English post:', create)
+        //console.log('English post:', create)
       }
       return isEnglish
   })
