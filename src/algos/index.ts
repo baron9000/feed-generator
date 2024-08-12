@@ -6,8 +6,7 @@ import {
 import * as baronfeeds from './baronfeeds'
 
 
-const feedconfigArray: FeedConfig[] = [baronfeeds.feedconfig];
-const feedConfigs: FeedConfigs = { feedconfigs: feedconfigArray };
+const feedConfigs: FeedConfigs = [ baronfeeds.feedconfig ]
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 
