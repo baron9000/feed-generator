@@ -126,9 +126,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     
     const englishPosts = ops.posts.creates.filter((create) => {
       const isEnglish = create.record.langs && create.record.langs.includes('en');
-      console.log('\n\n*******language********')
+/*      console.log('\n\n*******language********')
       console.log('Post languages:', create.record.langs)
       console.log('Is English:', isEnglish)
+*/
       return isEnglish
   })
 
@@ -138,18 +139,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const facets = create.record.facets ? create.record.facets : [];
     const reply = create.record.reply ? create.record.reply : null;
 
-    console.log('\n\n*******topics********')
-    console.log('Processing post:', create);
-    console.log('Text:', text);
-    console.log('Tags:', tags);
-    console.log('facets:',JSON.stringify(facets,null,2));
-    facets.forEach((facet,index) => {
-      console.log(`Facet ${index}:`, JSON.stringify(facet, null, 2));
-      if (facet.features) {
-        console.log(`Features in Facet ${index}:`, JSON.stringify(facet.features, null, 2));
-      }
-    });
-    console.log('Reply:', JSON.stringify(reply, null, 2));
     if(reply !== null) {
       return false;
     }
@@ -157,6 +146,16 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const hasImageEmbed = isImageEmbed(create.record.embed);
     if (isTopical) {
       console.log('\n\n*******Topical Post from matching:',isTopical)
+      
+      console.log('\n\n*******post********')
+      console.log('fullpost:', create);
+      console.log('facets:',JSON.stringify(facets,null,2));
+      facets.forEach((facet,index) => {
+        console.log(`Facet ${index}:`, JSON.stringify(facet, null, 2));
+        if (facet.features) {
+          console.log(`Features in Facet ${index}:`, JSON.stringify(facet.features, null, 2));
+        }
+      });
     }
     return isTopical;
   });
