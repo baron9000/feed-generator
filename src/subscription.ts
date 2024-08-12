@@ -28,6 +28,75 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     function isImageEmbed(embed: any): boolean {
       return embed && embed.$type === 'AppBskyEmbedImages.Main';
     }
+    const keywords = [
+      'anime',
+      'manga',
+      'photography',
+      'lgbt',
+      'lgbtq',
+      'lgbtqia',
+      'lgbtqia+',
+      'photographer',
+      'video games',
+      'videogames',
+      'gaming',
+      'gamer',
+      'cosplay',
+      'cosplayer',
+      'cosplaying',
+      'comic',
+      'comics',
+      'arcade',
+      'arcades',
+      'retro games',
+      'retrogaming',
+      'retro gaming',
+      'retrogamer',
+      'retro gamer',
+      'retro',
+      'music',
+      'musician',
+      'electronic music',
+      'edm',
+      'synthesizer',
+      'synth',
+      'synths',
+      'synthesizers',
+      'ai',
+      'artificial intelligence',
+      'machine learning',
+      'deep learning',
+      'neural networks',
+      'stablediffusion',
+      'stable diffusion',
+      'stable-diffusion',
+      'aiart',
+      'ai art',
+      'sillytavern',
+      'silly tavern',
+      'roleplaying',
+      'roleplaying games',
+      'rpg',
+      'dnd',
+      'd&d',
+      'dungeons and dragons',
+      'dungeons & dragons',
+      'tabletop games',
+      'tabletop gaming',
+      'board games',
+      'board gaming',
+      'warhammer',
+      'warhammer 40k',
+      'warhammer40k',
+      'warhammer 40000',
+      'warhammer40000'
+    ]
+
+    function matchesAnyKeyword(text: string, tags: string[]): boolean {
+      const lowerCaseText = text.toLowerCase();
+      const lowerCaseTags = tags.map(tag => tag.toLowerCase());
+      return keywords.some(keyword => lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword));
+    }
 
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
     
@@ -40,16 +109,14 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
   })
 
   const topicalPosts = englishPosts.filter((create) => {
-    const text = create.record.text.toLowerCase();
-    const tags = create.record.tags ? create.record.tags.map(tag => tag.toLowerCase()) : [];
-    const matchesTopic = text.includes('anime') || text.includes('manga') || text.includes('photography');
-    const hasNsfwTag = tags.includes('nsfw');
-    const isTopical = matchesTopic && (hasNsfwTag || text.includes('nsfw'));
+    const text = create.record.text;
+    const tags = create.record.tags ? create.record.tags : [];
+    const isTopical = matchesAnyKeyword(text, tags);
     const hasImageEmbed = isImageEmbed(create.record.embed);
-    if (isTopical && hasImageEmbed) {
+    if (isTopical) {
       console.log('Topical Post:', create);
     }
-    return isTopical && hasImageEmbed;
+    return isTopical;
   });
  
   const postsToCreate = topicalPosts.map((create) => {
