@@ -90,16 +90,32 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       'warhammer 40k',
       'warhammer40k',
       'warhammer 40000',
-      'warhammer40000'
+      'warhammer40000',
+      'art',
+      'artist',
+      'illustration',
+      'digital art',
+      'traditional art',
+      'digital',
+      'painting',
+      'drawing',
+      'sketch',
+      'clowns',
+      'clowngirl',
+      'clowngirls',
     ]
 
-    function matchesAnyKeyword(text: string, tags: string[]): string | null {
+    function matchesAnyKeyword(text: string, tags: string[], facets: any[]): string | null {
       const lowerCaseText = text.toLowerCase();
       const lowerCaseTags = tags.map(tag => tag.toLowerCase());
-      
+      const facetTags = facets.flatMap(facet =>
+        facet.features
+          .filter(feature => feature.$type === 'app.bsky.richtext.facet#tag')
+          .map(feature => feature.tag.toLowerCase())
+      );
 
       for (const keyword of keywords) {
-        if (lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword)) {
+        if (lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword) || facetTags.includes(keyword)) {
           return keyword;
         }
       }
@@ -134,8 +150,10 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
     });
     console.log('Reply:', JSON.stringify(reply, null, 2));
-
-    const isTopical = matchesAnyKeyword(text, tags);
+    if(reply !== null) {
+      return false;
+    }
+    const isTopical = matchesAnyKeyword(text, tags,facets);
     const hasImageEmbed = isImageEmbed(create.record.embed);
     if (isTopical) {
       console.log('\n\n*******Topical Post from matching:',isTopical)
