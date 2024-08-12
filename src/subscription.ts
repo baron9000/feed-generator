@@ -115,7 +115,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       );
 
       for (const keyword of keywords) {
-        if (lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword) || facetTags.includes(keyword)) {
+        const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
+        if (keywordRegex.test(lowerCaseText) || lowerCaseTags.includes(keyword) || facetTags.includes(keyword)) {
           return keyword;
         }
       }
