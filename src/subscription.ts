@@ -11,7 +11,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
 
     //grab some samples to know what records look like without digging through code
     
-    for (const post of ops.posts.creates) {
+    /*for (const post of ops.posts.creates) {
       console.log(post.record)
       if (post.record.facets) {
           for (const facet of post.record.facets) {
@@ -24,7 +24,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             }
           }
       }
-    }
+    }*/
+    
     function isImageEmbed(embed: any): boolean {
       return embed && embed.$type === 'AppBskyEmbedImages.Main';
     }
@@ -107,15 +108,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     
     const englishPosts = ops.posts.creates.filter((create) => {
       const isEnglish = create.record.langs && create.record.langs.includes('en');
-      if (isEnglish) {
-        //console.log('English post:', create)
-      }
+      console.log('\n\n*******language********')
+      console.log('Post languages:', create.record.langs)
+      console.log('Is English:', isEnglish)
       return isEnglish
   })
 
   const topicalPosts = englishPosts.filter((create) => {
     const text = create.record.text;
     const tags = create.record.tags ? create.record.tags : [];
+    console.log('\n\n*******topics********')
+    console.log('Processing post:', create);
+    console.log('Text:', text);
+    console.log('Tags:', tags);
     const isTopical = matchesAnyKeyword(text, tags);
     const hasImageEmbed = isImageEmbed(create.record.embed);
     if (isTopical) {
