@@ -4,7 +4,7 @@ import {
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { FeedConfig,FeedConfigs } from './config'
-import { algos,feedConfigs } from './algos/index'
+import { feedConfigs } from './algos'
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {

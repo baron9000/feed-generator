@@ -1,6 +1,6 @@
 import { Server } from '../lexicon'
 import { AppContext } from '../config'
-import algos from '../algos'
+import { algos } from '../algos'
 import { AtUri } from '@atproto/syntax'
 
 export default function (server: Server, ctx: AppContext) {
