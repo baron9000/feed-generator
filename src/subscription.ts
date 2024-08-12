@@ -10,7 +10,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const ops = await getOpsByType(evt)
 
     //grab some samples to know what records look like without digging through code
-    /*
+    
     for (const post of ops.posts.creates) {
       console.log(post.record)
       if (post.record.facets) {
@@ -24,7 +24,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             }
           }
       }
-    }*/
+    }
     function isImageEmbed(embed: any): boolean {
       return embed && embed.$type === 'AppBskyEmbedImages.Main';
     }
@@ -92,10 +92,15 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       'warhammer40000'
     ]
 
-    function matchesAnyKeyword(text: string, tags: string[]): boolean {
+    function matchesAnyKeyword(text: string, tags: string[]): string | null {
       const lowerCaseText = text.toLowerCase();
       const lowerCaseTags = tags.map(tag => tag.toLowerCase());
-      return keywords.some(keyword => lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword));
+      for (const keyword of keywords) {
+        if (lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword)) {
+          return keyword;
+        }
+      }
+      return null
     }
 
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
@@ -114,7 +119,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const isTopical = matchesAnyKeyword(text, tags);
     const hasImageEmbed = isImageEmbed(create.record.embed);
     if (isTopical) {
-      console.log('Topical Post:', create);
+      console.log('\n\n*******Topical Post from matching:',isTopical)
     }
     return isTopical;
   });
