@@ -96,6 +96,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     function matchesAnyKeyword(text: string, tags: string[]): string | null {
       const lowerCaseText = text.toLowerCase();
       const lowerCaseTags = tags.map(tag => tag.toLowerCase());
+      
+
       for (const keyword of keywords) {
         if (lowerCaseText.includes(keyword) || lowerCaseTags.includes(keyword)) {
           return keyword;
@@ -117,10 +119,22 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
   const topicalPosts = englishPosts.filter((create) => {
     const text = create.record.text;
     const tags = create.record.tags ? create.record.tags : [];
+    const facets = create.record.facets ? create.record.facets : [];
+    const reply = create.record.reply ? create.record.reply : null;
+
     console.log('\n\n*******topics********')
     console.log('Processing post:', create);
     console.log('Text:', text);
     console.log('Tags:', tags);
+    console.log('facets:',JSON.stringify(facets,null,2));
+    facets.forEach((facet,index) => {
+      console.log(`Facet ${index}:`, JSON.stringify(facet, null, 2));
+      if (facet.features) {
+        console.log(`Features in Facet ${index}:`, JSON.stringify(facet.features, null, 2));
+      }
+    });
+    console.log('Reply:', JSON.stringify(reply, null, 2));
+
     const isTopical = matchesAnyKeyword(text, tags);
     const hasImageEmbed = isImageEmbed(create.record.embed);
     if (isTopical) {
