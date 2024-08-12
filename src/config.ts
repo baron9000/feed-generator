@@ -17,3 +17,16 @@ export type Config = {
   publisherDid: string
   subscriptionReconnectDelay: number
 }
+
+export interface FeedConfig {
+  feedname: string
+  language: string | null
+  hasimage: boolean | null
+  isreply: boolean | null
+  isreskeet: boolean | null
+  isnsfw: boolean | null
+  keywords: string[] | null
+}
+export interface FeedConfigs {
+  feedconfigs: FeedConfig[]
+}
