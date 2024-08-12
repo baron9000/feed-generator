@@ -16,8 +16,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       return embed && embed.$type === 'AppBskyEmbedImages.Main';
     }
     
-    function matchesAnyKeyword(keywords: string[], text: string, tags: string[], facets: any[]): string | null {
-      const lowerCaseText = text.toLowerCase();
+    function matchesAnyTag(keytags: string[], tags: string[], facets: any[]): string | null {
       const lowerCaseTags = tags.map(tag => tag.toLowerCase());
       const facetTags = facets.flatMap(facet =>
         facet.features
@@ -25,9 +24,20 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           .map(feature => feature.tag.toLowerCase())
       );
   
+      for (const keyword of keytags) {
+        const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
+        if (facetTags.includes(keyword) || lowerCaseTags.includes(keyword)) {
+          return keyword;
+        }
+      }
+      return null
+    }
+
+    function matchesAnyKeyword(keywords: string[], text: string): string | null {
+      const lowerCaseText = text.toLowerCase();
       for (const keyword of keywords) {
         const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
-        if (keywordRegex.test(lowerCaseText) || lowerCaseTags.includes(keyword) || facetTags.includes(keyword)) {
+        if (keywordRegex.test(lowerCaseText)) {
           return keyword;
         }
       }
@@ -58,11 +68,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           }
         }
         const keywords = feedconfig.keywords || [];
-        const isTopical = matchesAnyKeyword(keywords,text,tags,facets);
+        const keytags = feedconfig.keytags || [];
+        const isTopical = matchesAnyKeyword(keywords,text);
+        const hasTags = matchesAnyTag(keytags,tags,facets);
         const hasImageEmbed = isImageEmbed(create.record.embed);
-        if (isTopical) {
+/*        if (isTopical) {
+          
           console.log('\n\n*******Topical Post from matching:',isTopical)
-
           console.log('\n\n*******post********')
           console.log('fullpost:', create);
           console.log('facets:',JSON.stringify(facets,null,2));
@@ -73,10 +85,15 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
             }
           });
         }
+*/
         if (feedconfig.hasimage === false && hasImageEmbed) {
           return false;
         }
-        return isTopical;
+        if(feedconfig.hasimage === true && !hasImageEmbed) {
+          return false;
+        }
+        const isRelevant = isTopical && hasTags;
+        return isRelevant;
       });
       return topicalPosts;
     }

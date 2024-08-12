@@ -10,6 +10,7 @@ lerna-debug.log*
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Don't grab anything with my login info.
 /scripts/publishFeedGen.ts
+.vscode/
 # Runtime data
 pids
 *.pid
