@@ -88,7 +88,7 @@ const unwantedtags = [
 export const feedconfig: FeedConfig = {
   feedname: shortname,
   language: 'en',
-  hasimage: true,
+  hasimage: null,
   isreply: null,
   isreskeet: null,
   isnsfw: null,
