@@ -6,6 +6,7 @@ import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { FeedConfig,FeedConfigs } from './config'
 import { feedConfigs } from './algos'
 import { query } from 'express';
+console.debug = () => {}; //disabling debug statements for now
 
 type PostType = {
   uri: string;
