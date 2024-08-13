@@ -153,6 +153,9 @@ const keywords = [
   'clowngirl',
   'clowngirls',
 ]
+const neededtags = null;
+const unwantedtags = null;
+
 export const feedconfig: FeedConfig = {
   feedname: shortname,
   language: 'en',
@@ -162,6 +165,8 @@ export const feedconfig: FeedConfig = {
   isnsfw: null,
   keywords: keywords,
   keytags: keytags,
+  neededtags: neededtags,
+  unwantedtags: unwantedtags
 }
 
 export const handler = async (ctx: AppContext, params: QueryParams): Promise<AlgoOutput> => {  

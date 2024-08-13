@@ -83,6 +83,34 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         }
         const keywords = feedconfig.keywords || [];
         const keytags = feedconfig.keytags || [];
+        const neededTags = feedconfig.neededtags || null;
+        const neededKeys = feedconfig.neededtags || null;
+        const unwantedTags = feedconfig.unwantedtags || null;
+        const unwantedKeys = feedconfig.unwantedtags || null;
+        if (neededTags !== null) {
+          const hasNeededTag = matchesAnyTag(neededTags,tags,facets);
+          if (!hasNeededTag) {
+            return false;
+          }
+        }
+        if (neededKeys !== null) {
+          const hasNeededKey = matchesAnyKeyword(neededKeys,text);
+          if (!hasNeededKey) {
+            return false;
+          }
+        }
+        if (unwantedTags !== null) {
+          const hasUnwantedTag = matchesAnyTag(unwantedTags,tags,facets);
+          if (hasUnwantedTag) {
+            return false;
+          }
+        }
+        if (unwantedKeys !== null) {
+          const hasUnwantedKey = matchesAnyKeyword(unwantedKeys,text);
+          if (hasUnwantedKey) {
+            return false;
+          }
+        }
         const isTopical = matchesAnyKeyword(keywords,text);
         const hasTags = matchesAnyTag(keytags,tags,facets);
         const hasImageEmbed = isImageEmbed(create.record.embed);

@@ -27,5 +27,7 @@ export interface FeedConfig {
   isnsfw: boolean | null
   keywords: string[] | null
   keytags: string[] | null
+  neededtags: string[] | null
+  unwantedtags: string[] | null
 }
 export type FeedConfigs = FeedConfig[]
