@@ -6,7 +6,6 @@ import {
 import * as baronfeeds from './baronfeeds'
 import * as nsfwfeeds from './nsfwfeeds'
 
-
 const feedConfigs: FeedConfigs = [ 
   baronfeeds.feedconfig, 
   nsfwfeeds.feedconfig

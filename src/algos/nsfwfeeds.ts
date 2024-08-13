@@ -2,7 +2,7 @@ import { QueryParams,OutputSchema as AlgoOutput } from '../lexicon/types/app/bsk
 import { AppContext } from '../config'
 import { FeedConfig } from '../config'
 // max 15 chars
-export const shortname = 'nfsw-art'
+export const shortname = 'nsfw-art'
 const keytags = [
   'anime',
   'manga',
