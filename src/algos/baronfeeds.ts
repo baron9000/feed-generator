@@ -161,14 +161,14 @@ export const feedconfig: FeedConfig = {
   isreskeet: null,
   isnsfw: null,
   keywords: keywords,
-  keytags: keytags
+  keytags: keytags,
 }
 
 export const handler = async (ctx: AppContext, params: QueryParams): Promise<AlgoOutput> => {  
   let builder = ctx.db
     .selectFrom('post')
     .selectAll()
-    .where('feedname', '=', shortname)
+    .where('feednames', 'like', `%'${shortname}'%`)
     .orderBy('indexedAt', 'desc')
     .orderBy('cid', 'desc')
     .limit(params.limit)

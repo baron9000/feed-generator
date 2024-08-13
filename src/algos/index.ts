@@ -7,7 +7,10 @@ import * as baronfeeds from './baronfeeds'
 import * as nsfwfeeds from './nsfwfeeds'
 
 
-const feedConfigs: FeedConfigs = [ baronfeeds.feedconfig, nsfwfeeds.feedconfig ]
+const feedConfigs: FeedConfigs = [ 
+  baronfeeds.feedconfig, 
+  nsfwfeeds.feedconfig
+]
 
 type AlgoHandler = (ctx: AppContext, params: QueryParams) => Promise<AlgoOutput>
 

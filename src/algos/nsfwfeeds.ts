@@ -108,7 +108,7 @@ export const handler = async (ctx: AppContext, params: QueryParams): Promise<Alg
   let builder = ctx.db
     .selectFrom('post')
     .selectAll()
-    .where('feedname', '=', shortname)
+    .where('feednames', 'like', `%'${shortname}'%`)
     .orderBy('indexedAt', 'desc')
     .orderBy('cid', 'desc')
     .limit(params.limit)

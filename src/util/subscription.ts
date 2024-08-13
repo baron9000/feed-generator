@@ -17,6 +17,12 @@ export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
 
   constructor(public db: Database, public service: string) {
+    if (!db) {
+      console.error('db is required')
+    } else {
+      console.log('DB initialized')
+    }
+    
     this.sub = new Subscription({
       service: service,
       method: ids.ComAtprotoSyncSubscribeRepos,
@@ -40,12 +46,18 @@ export abstract class FirehoseSubscriptionBase {
     try {
       for await (const evt of this.sub) {
         try {
+          if (!this.db) {
+            console.error('db not working in run')
+          }
           await this.handleEvent(evt)
         } catch (err) {
-          console.error('repo subscription could not handle message', err)
+          console.error('repo subscription could not handle message', evt, err)
         }
         // update stored cursor every 20 events or so
         if (isCommit(evt) && evt.seq % 20 === 0) {
+          if(!this.db) {
+            console.error('db not working in isCommit before updateCursor')
+          }
           await this.updateCursor(evt.seq)
         }
       }
@@ -56,6 +68,9 @@ export abstract class FirehoseSubscriptionBase {
   }
 
   async updateCursor(cursor: number) {
+    if (!this.db) {
+      console.error('db not working in updateCursor')
+    }
     await this.db
       .updateTable('sub_state')
       .set({ cursor })

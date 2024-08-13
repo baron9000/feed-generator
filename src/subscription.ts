@@ -5,15 +5,33 @@ import {
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 import { FeedConfig,FeedConfigs } from './config'
 import { feedConfigs } from './algos'
+import { query } from 'express';
 
+type PostType = {
+  uri: string;
+  cid: string;
+  feedname: string;
+  indexedAt: string;
+};
+
+type CombinedPostType = {
+  uri: string;
+  cid: string;
+  feednames: string;
+  indexedAt: string;
+}
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   async handleEvent(evt: RepoEvent) {
     if (!isCommit(evt)) return
     const ops = await getOpsByType(evt)
     
-    
     function isImageEmbed(embed: any): boolean {
-      return embed && embed.$type === 'AppBskyEmbedImages.Main';
+      if (embed) {
+        if (embed.$type === 'app.bsky.embed.images') {
+          return true;
+        }
+      }
+      return false;  
     }
     
     function matchesAnyTag(keytags: string[], tags: string[], facets: any[]): string | null {
@@ -23,9 +41,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
           .filter(feature => feature.$type === 'app.bsky.richtext.facet#tag')
           .map(feature => feature.tag.toLowerCase())
       );
-  
       for (const keyword of keytags) {
-        const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
         if (facetTags.includes(keyword) || lowerCaseTags.includes(keyword)) {
           return keyword;
         }
@@ -39,22 +55,19 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         const keywordRegex = new RegExp(`\\b${keyword}\\b`, 'i');
         if (keywordRegex.test(lowerCaseText)) {
           return keyword;
+
         }
       }
       return null
     }
-
-    function feedFilter(feedconfig: FeedConfig) {
+    async function feedFilter(feedconfig: FeedConfig) {
+      const feedname = feedconfig.feedname;
       const language = feedconfig.language !== null ? feedconfig.language : null; 
       const languagePosts = ops.posts.creates.filter((create) => {
         if (language === null) {
           return true;
         }
         const isLanguage = create.record.langs && create.record.langs.includes(language);
-        /*      console.log('\n\n*******language********')
-        console.log('Post languages:', create.record.langs)
-        console.log('Is English:', isEnglish)
-        */
         return isLanguage
       });
       const topicalPosts = languagePosts.filter((create) => {
@@ -72,77 +85,96 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         const isTopical = matchesAnyKeyword(keywords,text);
         const hasTags = matchesAnyTag(keytags,tags,facets);
         const hasImageEmbed = isImageEmbed(create.record.embed);
-/*        if (isTopical) {
-          
-          console.log('\n\n*******Topical Post from matching:',isTopical)
-          console.log('\n\n*******post********')
-          console.log('fullpost:', create);
-          console.log('facets:',JSON.stringify(facets,null,2));
-          facets.forEach((facet,index) => {
-            console.log(`Facet ${index}:`, JSON.stringify(facet, null, 2));
-            if (facet.features) {
-              console.log(`Features in Facet ${index}:`, JSON.stringify(facet.features, null, 2));
-            }
-          });
-        }
-*/
         if (feedconfig.hasimage === false && hasImageEmbed) {
           return false;
         }
         if(feedconfig.hasimage === true && !hasImageEmbed) {
           return false;
         }
-        const isRelevant = isTopical && hasTags;
+        const isRelevant = isTopical || hasTags;
         return isRelevant;
       });
       return topicalPosts;
     }
-    for ( let feedcfg of Object.values(feedConfigs)) {
-      const feedname = feedcfg.feedname;
-      const topicalPosts = feedFilter(feedcfg);
-
-
-      const postsToCreate = topicalPosts.map((create) => {
-        return {
-          uri: create.uri,
-          cid: create.cid,
-          feedname: feedname,
-          indexedAt: new Date().toISOString(),
-        }
-      })
-    
-      const postsToDelete = ops.posts.deletes.map((del) => del.uri)
-      if (postsToDelete.length > 0) {
-        await this.db
-          .deleteFrom('post')
-          .where('uri', 'in', postsToDelete)
-          .execute()
+    async function processFeeds(feedConfigs: FeedConfigs) {
+      let allPostsToCreate:PostType[] = [];
+      let allPostsToDelete:string[] = [];
+      for ( let feedcfg of Object.values(feedConfigs)) {
+      
+        const feedname = feedcfg.feedname;
+        const topicalPosts = await feedFilter(feedcfg);
+        const postsToDelete = ops.posts.deletes.map((del) => del.uri)
+        const postsToCreate = topicalPosts.map((create) => {
+          return {
+            uri: create.uri,
+            cid: create.cid,
+            feedname: feedname,
+            indexedAt: new Date().toISOString(),
+          }
+        
+        })
+        allPostsToCreate = allPostsToCreate.concat(postsToCreate);
+        allPostsToDelete = allPostsToDelete.concat(postsToDelete);
       }
-      if (postsToCreate.length > 0) {
-        await this.db
-          .insertInto('post')
-          .values(postsToCreate)
-          .onConflict((oc) => oc.doNothing())
-          .execute()
-      }
-    
+      
+      return { allPostsToCreate, allPostsToDelete } 
     }
+    //PROCESSING BEGINS HERE
+    
+    let allPostsToCreate:PostType[] = [];
+    let allPostsToDelete:string[] = [];
+    
+    ({allPostsToCreate, allPostsToDelete} = await processFeeds(feedConfigs))
+
+    const postsMap: { [key: string]: PostType[] } = {};
+
+    allPostsToCreate.forEach(post => {
+      if (!postsMap[post.uri]) {
+        postsMap[post.uri] = [];
+      }
+      postsMap[post.uri].push(post);
+    })
+
+    const combinedPosts:CombinedPostType[] = [];
+    for (const uri in postsMap) {
+      const posts = postsMap[uri];
+      const feednames = posts.map(post => post.feedname);
+      const combinedFeednames = `['${feednames.join("','")}']`;
+
+      const combinedPost: CombinedPostType = {
+        uri: posts[0].uri,
+        cid: posts[0].cid,
+        feednames: combinedFeednames,
+        indexedAt: posts[0].indexedAt,
+      };
+      combinedPosts.push(combinedPost);
+    }
+    if (combinedPosts.length > 0) {
+      console.debug('Posts to create:', combinedPosts);
+      const insertQuery = this.db
+      .insertInto('post')
+      .values(combinedPosts)
+      .onConflict((oc) => oc.doNothing())
+
+      const compiledInsertQuery = insertQuery.compile();
+      console.debug('Compiled insert query:', compiledInsertQuery.sql, compiledInsertQuery.parameters);
+      await this.db
+        .insertInto('post')
+        .values(combinedPosts)
+        .onConflict((oc) => oc.doNothing())
+        .execute()
+    }
+    const uniquePostsToDelete = Array.from(new Set(allPostsToDelete));
+    if (uniquePostsToDelete.length > 0) {
+      console.debug('Posts to delete:', uniquePostsToDelete);
+        const deleteQuery = this.db
+        .deleteFrom('post')
+        .where('uri', 'in', uniquePostsToDelete)
+      const compiledDeleteQuery = deleteQuery.compile();
+      console.debug('Compiled delete query:', compiledDeleteQuery.sql, compiledDeleteQuery.parameters);  
+      await deleteQuery.execute()
+    }   
   }
 } 
-    //grab some samples to know what records look like without digging through code
-    
-    /*for (const post of ops.posts.creates) {
-      console.log(post.record)
-      if (post.record.facets) {
-          for (const facet of post.record.facets) {
-            console.log('Facet:', facet)
-            if (facet.index) {
-              console.log('Index:', facet.index)
-            }
-            if (facet.features) {
-              console.log('Features:', facet.features)
-            }
-          }
-      }
-    }*/
+  
     
